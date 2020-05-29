@@ -16,13 +16,13 @@ struct EditView: View {
         NavigationView {
             VStack(alignment: .leading) {
                 TextField("Enter Name", text: $person.name)
-                    .font(.largeTitle)
-                    .foregroundColor(Color.blue)
-                    .padding()
-                TextField("Details, ie where you met?, where you know them from?, etc", text: $person.details)
                     .font(.title)
+                    .foregroundColor(Color.blue)
+                    .padding(.leading)
+                TextField("Details, ie where you met?, where you know them from?, etc", text: $person.details)
+                    .font(.body)
                     .foregroundColor(.secondary)
-                    .padding()
+                    .padding(.leading)
                 Image(uiImage: person.wrappedUIImage)
                     .resizable()
                     .scaledToFit()
