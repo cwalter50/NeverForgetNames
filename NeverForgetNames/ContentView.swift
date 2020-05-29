@@ -21,43 +21,51 @@ struct ContentView: View {
     // for the action sheet to enter name and details
     @State private var showingEditName = false
     
+    // This will be used to get the location of where you met the new person.
+    let locationFetcher = LocationFetcher()
+    
     var body: some View {
         NavigationView {
-            List (people) { person in
-                HStack {
-                    // display the image
-                    Image(uiImage: person.uiImage!)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 100, height: 100)
-                        .clipShape(Circle())
-                    VStack {
-                        Text(person.name)
-                            .font(.title)
-                            .foregroundColor(.primary)
-                        Text(person.details)
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+            List {
+                ForEach (people) { person in
+                    HStack {
+                        // display the image
+                        Image(uiImage: person.uiImage!)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                        VStack {
+                            Text(person.name)
+                                .font(.title)
+                                .foregroundColor(.primary)
+                            Text(person.details)
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .onTapGesture {
+                        // update selected Person
+                        self.selectedPerson = person
+                        // present the edit name alert
+                        self.showingEditName = true
+                        
                     }
                 }
-                .onTapGesture {
-                    // update selected Person
-                    self.selectedPerson = person
-                    // present the edit name alert
-                    self.showingEditName = true
-                    
-                }
+                .onDelete(perform: removePerson)
+                
             }
             .onAppear(perform: loadData)
             .navigationBarTitle("Never Forget Names")
-            .navigationBarItems(trailing: Button(action: {
-                self.showingImagePicker = true
-                print("should show ImagePicker")
-//                self.people.append(Person(uiImage: UIImage(named: "default")!))
-//                self.names.append("Doc")
-            }) {
-                Image(systemName: "plus")
-            })
+            .navigationBarItems(leading: EditButton(), trailing: Button(action: {
+                        // start the location Fetcher, so that we know where the picture was taken
+                        self.locationFetcher.start()
+                        self.showingImagePicker = true
+                        print("should show ImagePicker")
+        
+                    }) {
+                        Image(systemName: "plus")
+                    })
 
             .sheet(isPresented: $showingImagePicker, onDismiss: addNewPerson) {
                 ImagePicker(image: self.$inputImage)
@@ -73,9 +81,22 @@ struct ContentView: View {
         }
     }
     
+    func removePerson(at offsets: IndexSet) {
+        people.remove(atOffsets: offsets)
+        // override the last save, and update the people saved to Documents Directory
+        saveData()
+    }
+    
     func addNewPerson()
     {
         let newPerson = Person(uiImage: inputImage)
+        // grab the location of the meeting
+        if let location = self.locationFetcher.lastKnownLocation {
+            newPerson.location = location
+        } else {
+            print("Your location is unknown")
+        }
+        
         selectedPerson = newPerson
         people.insert(newPerson, at: 0)
         showingEditName = true // this will trigger the sheet so that we can edit the name and details

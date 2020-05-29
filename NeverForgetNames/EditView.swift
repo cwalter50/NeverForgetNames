@@ -14,19 +14,22 @@ struct EditView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                Section {
-                    TextField("Enter Name", text: $person.name)
-                    TextField("Details, ie where you met?, where you know them from?, etc", text: $person.details)
-                }
-                Section {
-                    Image(uiImage: person.wrappedUIImage)
+            VStack(alignment: .leading) {
+                TextField("Enter Name", text: $person.name)
+                    .font(.largeTitle)
+                    .foregroundColor(Color.blue)
+                    .padding()
+                TextField("Details, ie where you met?, where you know them from?, etc", text: $person.details)
+                    .font(.title)
+                    .foregroundColor(.secondary)
+                    .padding()
+                Image(uiImage: person.wrappedUIImage)
                     .resizable()
                     .scaledToFit()
                     .clipShape(Circle())
-                    
-                }
+                MapView(person: person)
             }
+
             .navigationBarTitle("Edit Person")
             .navigationBarItems(trailing: Button("Done") {
                 self.presentationMode.wrappedValue.dismiss()

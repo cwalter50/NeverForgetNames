@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftUI
+import CoreLocation
 
 class Person: Identifiable, ObservableObject, Codable, Comparable {
 
@@ -16,10 +17,9 @@ class Person: Identifiable, ObservableObject, Codable, Comparable {
     var id = UUID()
     var uiImage: UIImage?
     var details: String = "A new friend"
+    var location: CLLocationCoordinate2D = CLLocationCoordinate2D()
     
-    enum CodingKeys: CodingKey {
-        case name, id, uiImage, details
-    }
+    
     
     init ()
     {
@@ -29,6 +29,12 @@ class Person: Identifiable, ObservableObject, Codable, Comparable {
     init(uiImage: UIImage?)
     {
         self.uiImage = uiImage
+    }
+    init(uiImage: UIImage?, location: CLLocationCoordinate2D)
+    {
+        self.uiImage = uiImage
+        self.location = location
+        
     }
     
     
@@ -42,12 +48,22 @@ class Person: Identifiable, ObservableObject, Codable, Comparable {
         }
     }
     
+    // make this enum to help with encoding and decoding
+    enum CodingKeys: CodingKey {
+        case name, id, uiImage, details, latitude, longitude
+    }
+    
     public required init(from decoder: Decoder) throws {
 
         let container = try decoder.container(keyedBy: CodingKeys.self)
         name = try container.decode(String.self, forKey: .name)
         details = try container.decode(String.self, forKey: .details)
         id = try container.decode(UUID.self, forKey: .id)
+        
+        // grab lat and longitude, then create the location
+        let latitude = try container.decode(CLLocationDegrees.self, forKey: .latitude)
+        let longitude = try container.decode(CLLocationDegrees.self, forKey: .longitude)
+        location = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
 
         // UIImage does not conform to codable, so we have to covert to Data before we then get the image
         let uiImageData = try container.decode(Data.self, forKey: .uiImage)
@@ -59,6 +75,8 @@ class Person: Identifiable, ObservableObject, Codable, Comparable {
         try container.encode(name, forKey: .name)
         try container.encode(details, forKey: .details)
         try container.encode(id, forKey: .id)
+        try container.encode(location.latitude, forKey: .latitude)
+        try container.encode(location.longitude, forKey: .longitude)
                 // UIImage does not conform to codable, so we have to covert to Data first
         if let imageData = uiImage?.jpegData(compressionQuality: 0.8) {
             try container.encode(imageData, forKey: .uiImage)
